@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t rolarne/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run rolarne/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t rolarne/multi-client ./client
+  - docker build -t rolarne/multi-nginx ./nginx
+  - docker build -t rolarne/multi-server ./server
+  - docker build -t rolarne/multi-worker ./worker
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push rolarne/multi-client
+  - docker push rolarne/multi-nginx
+  - docker push rolarne/multi-server
+  - docker push rolarne/multi-worker
